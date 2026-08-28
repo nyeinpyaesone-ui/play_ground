@@ -1,25 +1,36 @@
 # Fine-Tuning Studio
 
-A lightweight, reusable, self-contained control system for finite fine-tuning projects.
+A lightweight, reusable, self-contained project workspace for finite fine-tuning work.
+
+## Product definition
+
+Fine-Tuning Studio is a **project control and analytics application**. Training is optional. The application does not require a permanently running cloud service and does not invent training results.
+
+The primary operating model is:
+
+```text
+Create project → Dataset → Configure → Prepare → Optional Execute → Evaluate → Export → Archive
+```
 
 ## Architecture
 
-The application is designed to run locally as the primary mode. GUI, API, experiment metadata and workspace live together in one portable project. Training compute is a replaceable local worker rather than a permanent cloud dependency.
+The local project contains the GUI, API, configuration, experiment metadata and workspace. The training engine is an adapter boundary: a local GPU process can be attached when actual training is required, but the control application remains useful without a trainer.
 
-GitHub and Railway are development/deployment conveniences, not required for normal offline/local operation. Hugging Face is an optional model/dataset publishing connector.
+GitHub and Railway are development/deployment conveniences. Hugging Face is an optional connector. Normal project work can be performed offline.
 
 ## Current capabilities
 
-- Responsive training-operations GUI
+- Responsive production GUI
+- Reusable six-stage workflow: Dataset, Configure, Prepare, Execute, Evaluate, Export
 - LoRA / QLoRA / SFT configuration
-- Durable local experiment state in `WORKSPACE_DIR/studio.json`
-- Run lifecycle: queued, running, completed, failed, cancelled
-- Honest analytics derived from stored run records
-- No synthetic training metrics
-- Configuration validation with Zod
-- Health endpoint with local persistence verification
+- Durable local project state in `WORKSPACE_DIR/studio.json`
+- Run/stage lifecycle: queued, running, completed, failed, cancelled
+- Analytics derived only from stored measured results
+- No synthetic loss, evaluation or throughput values
+- Validated configuration and measured-result API boundaries
+- Health and runtime-mode endpoints
 - Portable Docker runtime
-- Optional external integrations
+- Optional GitHub, Railway and Hugging Face integrations
 
 ## Local quick start
 
@@ -28,7 +39,7 @@ npm ci
 npm run dev
 ```
 
-Or with Docker:
+Or:
 
 ```bash
 docker compose up --build
@@ -36,22 +47,22 @@ docker compose up --build
 
 Open `http://localhost:3000`.
 
-## Workspace
+## Project workspace
 
-The `workspace/` directory is intentionally local and ignored by Git. Keep datasets, model/adapters, experiment exports and the durable `studio.json` state there. Back it up when the finite project is complete.
+`workspace/` is intentionally local and ignored by Git. Keep datasets, experiment state, evaluation records, model/adapters and exports there. When the finite project is complete, archive or copy the workspace as the project record.
 
-## Training execution boundary
+## Training boundary
 
-Creating a run only creates a real queued job record. The control plane never fabricates loss, evaluation or throughput. A real training worker must claim and execute the job before those metrics can exist.
+Saving an Execute-stage configuration **does not start training**. A real runner may consume the saved configuration later. Only a runner or trusted result-ingestion process may write measured loss, evaluation and throughput values.
 
-This boundary allows the same project to use a local GPU, another local process, or a future external runner without redesigning the GUI.
+This keeps the application useful as a planning, experiment-management and analytics tool while allowing actual fine-tuning to be attached when needed.
 
 ## Optional integrations
 
-- `HF_TOKEN`: enable a future Hugging Face connector.
-- `TRAINER_COMMAND`: reserved for a real local training-worker integration; leave unset until an actual trainer is installed.
-- Railway: useful for temporary preview/control-plane deployment, not required for local operation.
+- `HF_TOKEN`: optional Hugging Face connector configuration.
+- `TRAINER_COMMAND`: reserved for a real local training-worker integration; leave unset when training is not required.
+- Railway: temporary preview/control-plane deployment only; it is not a permanent runtime requirement.
 
 ## Production principle
 
-**Portable first. Cloud optional. Data stays with the project. No fake results.**
+**Portable first. Self-contained by default. Training optional. Cloud optional. Data stays with the project. No fake results.**
